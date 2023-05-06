@@ -7,12 +7,12 @@ const cssPath = path.join(__dirname, "styles");
 let writeStream = fs.createWriteStream(bundlePath);
 
 fs.readdir(cssPath, (error, files) => {
-  error
-    ? console.error(error)
-    : files.forEach((file) => {
+  !error
+    ? files.forEach((file) => {
         if (path.parse(file).ext === ".css") {
           let readStrim = fs.createReadStream(path.join(cssPath, file));
           readStrim.pipe(writeStream);
         }
-      });
+      })
+    : console.error(error);
 });

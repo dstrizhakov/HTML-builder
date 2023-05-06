@@ -9,9 +9,7 @@ fs.rm(toFolder, { recursive: true, force: true }, (error) => {
   fs.mkdir(toFolder, { recursive: true }, (error) => {
     !error ? console.log("Folder created successfully") : console.error(error);
     fs.readdir(fromFolder, { withFileTypes: true }, (error, files) => {
-      if (error) {
-        console.error(error);
-      } else {
+      if (!error) {
         for (let file of files) {
           if (file.isFile()) {
             fs.copyFile(
@@ -25,6 +23,8 @@ fs.rm(toFolder, { recursive: true, force: true }, (error) => {
             );
           }
         }
+      } else {
+        console.error(error);
       }
     });
   });
