@@ -4,6 +4,8 @@ const path = require("path");
 const distPath = path.join(__dirname, "project-dist");
 const assetsPath = path.join(__dirname, "assets");
 const cssPath = path.join(__dirname, "styles");
+const templatePath = path.join(__dirname, "template.html");
+const componentsPath = path.join(__dirname, "components");
 
 function copyFolders(fromPath, toPath) {
   fs.readdir(fromPath, { withFileTypes: true }, (error, items) => {
@@ -55,11 +57,46 @@ function buildCss(fromPath, toPath) {
   });
 }
 
+function buildHtml(templatePath, componentsPath, toPath) {
+  fs.readFile(templatePath, "utf-8", (error, template) => {
+    if (!error) {
+      fs.readdir(componentsPath, (error, files) => {
+        if (!error) {
+          files.forEach((file) => {
+            fs.readFile(
+              path.join(componentsPath, file),
+              "utf-8",
+              (error, content) => {
+                if (!error) {
+                  template = template.replaceAll(
+                    `{{${path.parse(file).name}}}`,
+                    content
+                  );
+                  let htmlWriteStream = fs.createWriteStream(
+                    path.join(toPath, "index.html")
+                  );
+                  htmlWriteStream.write(template);
+                } else {
+                  console.error(error);
+                }
+              }
+            );
+          });
+        } else {
+          console.error(error);
+        }
+      });
+    } else {
+      console.error(error);
+    }
+  });
+}
+
 fs.mkdir(distPath, { recursive: true }, (error) => {
   if (!error) {
-    // create css
+    // create css - combine all css files to styles.css
     buildCss(cssPath, distPath);
-    // copy assets
+    // copy assets - recursive copy folders and files
     fs.mkdir(path.join(distPath, "assets"), { recursive: true }, (error) => {
       if (!error) {
         copyFolders(assetsPath, path.join(distPath, "assets"));
@@ -67,43 +104,8 @@ fs.mkdir(distPath, { recursive: true }, (error) => {
         console.error(error);
       }
     });
-    // creat index.html
-    fs.readFile(
-      path.join(__dirname, "template.html"),
-      "utf-8",
-      (error, buffer) => {
-        if (!error) {
-          fs.readdir(path.join(__dirname, "components"), (error, files) => {
-            if (!error) {
-              files.forEach((file) => {
-                fs.readFile(
-                  path.join(__dirname, "components", file),
-                  "utf-8",
-                  (error, content) => {
-                    if (!error) {
-                      buffer = buffer.replace(
-                        `{{${path.parse(file).name}}}`,
-                        content
-                      );
-                      let indexWriteStream = fs.createWriteStream(
-                        path.join(__dirname, "project-dist", "index.html")
-                      );
-                      indexWriteStream.write(buffer);
-                    } else {
-                      console.error(error);
-                    }
-                  }
-                );
-              });
-            } else {
-              console.error(error);
-            }
-          });
-        } else {
-          console.error(error);
-        }
-      }
-    );
+    // creat index.html - replace all templates to html and write it to index.html
+    buildHtml(templatePath, componentsPath, distPath);
   } else {
     console.error(error);
   }
