@@ -68,7 +68,7 @@ function buildHtml(templatePath, componentsPath, toPath) {
               "utf-8",
               (error, content) => {
                 if (!error) {
-                  template = template.replaceAll(
+                  template = template.replace(
                     `{{${path.parse(file).name}}}`,
                     content
                   );
